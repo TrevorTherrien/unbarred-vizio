@@ -12,9 +12,12 @@ data class BarDevice(
     val advertisedName: String?,
     val rssi: Int,
     val nickname: String? = null,
+    /** The name set for this device in the phone's Bluetooth settings, if any (Android 11+). */
+    val osAlias: String? = null,
 ) {
-    /** What to show in the picker: the user's nickname, else the advert name, else the address. */
-    val label: String get() = nickname?.takeIf { it.isNotBlank() } ?: advertisedName ?: "VIZIO bar"
+    /** Later wins: the bar's broadcast name → the phone's Bluetooth nickname → the Unbarred nickname. */
+    val label: String get() =
+        nickname?.takeIf { it.isNotBlank() } ?: osAlias?.takeIf { it.isNotBlank() } ?: advertisedName ?: "VIZIO bar"
 }
 
 /**

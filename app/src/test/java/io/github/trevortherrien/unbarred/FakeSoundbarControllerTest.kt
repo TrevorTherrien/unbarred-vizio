@@ -77,6 +77,17 @@ class FakeSoundbarControllerTest {
         assertEquals(8, p.avDelayMax)
     }
 
+    @Test fun renameConnected_setsAndClearsShownName() {
+        val c = FakeSoundbarController()
+        c.renameConnected("Ignored")                       // not connected: no-op
+        assertEquals(null, c.deviceName.value)
+        c.scanAndConnect()
+        c.renameConnected("  Living Room  ")
+        assertEquals("Living Room", c.deviceName.value)
+        c.renameConnected(" ")                             // blank clears back to the bar's own name
+        assertEquals("VIZIO Bar (fake)", c.deviceName.value)
+    }
+
     @Test fun booleanSetters_sendOneOrZero() {
         val c = FakeSoundbarController()
         c.setNight(true)

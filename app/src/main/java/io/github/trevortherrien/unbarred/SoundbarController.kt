@@ -60,6 +60,9 @@ interface SoundbarController {
     /** Assign or clear a persisted nickname for a bar (null/blank clears it). */
     fun rename(address: String, nickname: String?)
 
+    /** Same as [rename], for the bar that's connected now. No-op when not connected. */
+    fun renameConnected(nickname: String?)
+
     /** Re-read the bar's reported state into [deviceState]. No-op if not connected. */
     fun refreshState()
 

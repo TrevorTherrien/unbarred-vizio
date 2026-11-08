@@ -2,6 +2,10 @@ package io.github.trevortherrien.unbarred
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -74,6 +79,7 @@ fun RoundIconButton(
 }
 
 /** Slider bound to a characteristic. [showHeader] false renders the bare slider (volume hero). */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveLevelSlider(
     label: String, char: UUID, values: Map<UUID, Int>,
@@ -101,6 +107,12 @@ fun LiveLevelSlider(
                     color = if (barValue != null && local.toInt() != 0 && min < 0) Ub.Accent else Ub.Text)
             }
         }
+        val colors = SliderDefaults.colors(
+            inactiveTrackColor = Ub.Track,
+            activeTickColor = Color.Transparent,
+            inactiveTickColor = Color.Transparent,
+        )
+        val interaction = remember { MutableInteractionSource() }
         Slider(
             value = local,
             onValueChange = {
@@ -117,12 +129,38 @@ fun LiveLevelSlider(
             valueRange = min.toFloat()..max.toFloat(),
             steps = if (max - min <= 40) (max - min - 1).coerceAtLeast(0) else 0,
             enabled = enabled,
-            colors = SliderDefaults.colors(
-                inactiveTrackColor = Ub.Track,
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent,
-            ),
+            colors = colors,
+            interactionSource = interaction,
+            // Thumb as wide as the track is tall, so the current-value marker reads as clearly as the fill.
+            thumb = {
+                SliderDefaults.Thumb(interactionSource = interaction, colors = colors, enabled = enabled,
+                    thumbSize = DpSize(SliderTrackHeight, 44.dp))
+            },
+            track = { state ->
+                // Signed levels (−N..+N) fill outward from 0, so "0" reads as empty, not half full.
+                if (min < 0) CenteredTrack(local, min, max, enabled)
+                else SliderDefaults.Track(sliderState = state, colors = colors, enabled = enabled)
+            },
         )
+    }
+}
+
+/** Material 3's default track height; the thumb width and the centred track match it. */
+private val SliderTrackHeight = 16.dp
+
+/** Track for a signed slider: full dark bar, a mark at 0, and an orange fill from 0 to [value]. */
+@Composable
+private fun CenteredTrack(value: Float, min: Int, max: Int, enabled: Boolean) {
+    val active = if (enabled) Ub.Accent else Ub.Muted
+    Canvas(Modifier.fillMaxWidth().height(SliderTrackHeight)) {
+        val y = size.height / 2
+        val h = SliderTrackHeight.toPx()
+        fun x(v: Float) = (v - min) / (max - min) * size.width
+        // Inset by half the height so the rounded ends stay inside the slider's width.
+        drawLine(Ub.Track, Offset(h / 2, y), Offset(size.width - h / 2, y), h, StrokeCap.Round)
+        val zero = x(0f)
+        if (value != 0f) drawLine(active, Offset(zero, y), Offset(x(value), y), h, StrokeCap.Round)
+        drawLine(Ub.Muted, Offset(zero, y - h / 4), Offset(zero, y + h / 4), 2.dp.toPx(), StrokeCap.Round)
     }
 }
 

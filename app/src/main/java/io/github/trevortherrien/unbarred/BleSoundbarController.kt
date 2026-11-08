@@ -183,7 +183,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
 
     private fun barFrom(r: ScanResult): BarDevice {
         val addr = r.device.address
-        return BarDevice(addr, r.device.name, r.rssi, BarNames.get(context, addr))
+        return BarDevice(addr, r.device.name, r.rssi, BarNames.get(context, addr), osAlias(r.device))
     }
 
     private fun publishResults() {
@@ -240,6 +240,19 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         }
     }
 
+    /**
+     * The phone's own nickname for this device (Settings → Bluetooth), or null. Android only
+     * returns an alias that differs from the broadcast name; unpaired LE devices usually have none.
+     */
+    private fun osAlias(dev: BluetoothDevice): String? =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            runCatching { dev.alias }.getOrNull()?.trim()?.takeIf { it.isNotEmpty() && it != dev.name }
+        else null
+
+    /** Later wins: broadcast name → phone's Bluetooth nickname → Unbarred nickname. */
+    private fun displayName(dev: BluetoothDevice): String =
+        BarNames.get(context, dev.address) ?: osAlias(dev) ?: dev.name ?: dev.address
+
     override fun connect(address: String) {
         if (!hasBlePermissions()) { emitEvent("Bluetooth permission needed"); return }
         scanGen++                 // cancel any pending scan-decision coroutine
@@ -251,7 +264,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         connecting = true
         connectedAddress = address
         _phase.value = LinkPhase.CONNECTING
-        _deviceName.value = BarNames.get(context, address) ?: dev.name ?: address
+        _deviceName.value = displayName(dev)
         log("Connecting to ${_deviceName.value}…")
         gatt = runCatching { dev.connectGatt(context, false, gattCb, BluetoothDevice.TRANSPORT_LE) }.getOrNull()
         if (gatt == null) { connecting = false; connectedAddress = null; _phase.value = LinkPhase.IDLE; emitEvent("Connection failed to start") }
@@ -266,6 +279,13 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         if (connectedAddress == address) {
             _deviceName.value = applied ?: _deviceName.value
         }
+    }
+
+    override fun renameConnected(nickname: String?) {
+        val address = connectedAddress ?: return
+        rename(address, nickname)
+        // Cleared: fall back to the advertised name, as on connect.
+        if (BarNames.get(context, address) == null) gatt?.device?.let { _deviceName.value = displayName(it) }
     }
 
     override fun disconnect() {

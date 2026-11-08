@@ -72,6 +72,11 @@ class FakeSoundbarController : SoundbarController {
         }
     }
 
+    override fun renameConnected(nickname: String?) {
+        if (!_connected.value) return
+        _deviceName.value = nickname?.trim()?.takeIf { it.isNotEmpty() } ?: "VIZIO Bar (fake)"
+    }
+
     override fun disconnect() {
         _connected.value = false
         _deviceState.value = DeviceState()

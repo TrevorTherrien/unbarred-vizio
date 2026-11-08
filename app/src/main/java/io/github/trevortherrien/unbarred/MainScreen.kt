@@ -87,7 +87,7 @@ fun Screen(controller: SoundbarController, onConnect: () -> Unit, onExit: () -> 
 
     Box(Modifier.fillMaxSize().background(Ub.Background)) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            Header(name, phase, devState.modelName, onSettings = { showSettings = true })
+            Header(if (linked) name else null, phase, devState.modelName, onSettings = { showSettings = true })
 
             if (!linked) {
                 ConnectView(phase, status, scanResults, scanning, onConnect,
@@ -111,7 +111,7 @@ fun Screen(controller: SoundbarController, onConnect: () -> Unit, onExit: () -> 
                         when (tab) {
                             Tab.SOUND -> SoundTab(values, enabled, controller)
                             Tab.LEVELS -> LevelsTab(values, enabled, controller, caps)
-                            Tab.SYSTEM -> SystemTab(values, enabled, controller, caps, devState, showDiagnostics)
+                            Tab.SYSTEM -> SystemTab(values, enabled, controller, caps, devState, showDiagnostics, name)
                         }
                     }
                 }
@@ -256,21 +256,21 @@ private fun BarPicker(
         }
     }
     renaming?.let { bar ->
-        RenameDialog(bar, onDismiss = { renaming = null },
+        RenameDialog(bar.nickname, bar.osAlias ?: bar.advertisedName ?: bar.address, onDismiss = { renaming = null },
             onSave = { nick -> onRename(bar.address, nick); renaming = null })
     }
 }
 
 @Composable
-private fun RenameDialog(bar: BarDevice, onDismiss: () -> Unit, onSave: (String?) -> Unit) {
-    var text by remember { mutableStateOf(bar.nickname ?: "") }
+private fun RenameDialog(current: String?, subtitle: String?, onDismiss: () -> Unit, onSave: (String?) -> Unit) {
+    var text by remember { mutableStateOf(current ?: "") }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Ub.SurfaceHigh,
         title = { Text("Name this bar") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(bar.advertisedName ?: bar.address, fontSize = 13.sp, color = Ub.Muted)
+                if (subtitle != null) Text(subtitle, fontSize = 13.sp, color = Ub.Muted)
                 OutlinedTextField(value = text, onValueChange = { text = it }, singleLine = true,
                     label = { Text("Custom name") })
             }
@@ -368,9 +368,10 @@ private fun LevelsTab(values: Map<UUID, Int>, enabled: Boolean, controller: Soun
 @Composable
 private fun SystemTab(
     values: Map<UUID, Int>, enabled: Boolean, controller: SoundbarController, caps: Capabilities,
-    st: DeviceState, showDiagnostics: Boolean,
+    st: DeviceState, showDiagnostics: Boolean, shownName: String?,
 ) {
     val p = caps.profile
+    var renaming by remember { mutableStateOf(false) }
 
     SectionLabel("Input", Modifier.padding(top = 8.dp))
     // Input reports as a text token (A104, e.g. "ARC"), not the write-enum — map it. A104 has no
@@ -407,6 +408,15 @@ private fun SystemTab(
 
     SectionLabel("Device", Modifier.padding(top = 12.dp))
     Panel {
+        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Shown as", fontSize = 13.sp, color = Ub.Muted)
+                Text(shownName ?: "—", fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            OutlinedButton(onClick = { renaming = true }, modifier = Modifier.height(44.dp),
+                border = BorderStroke(1.dp, Ub.Outline)) { Text("Rename", color = Ub.Text) }
+        }
         InfoRow("Model", st.modelName)
         InfoRow("Name", st.friendlyName)
         InfoRow("Firmware", st.firmware)
@@ -425,6 +435,11 @@ private fun SystemTab(
             OutlinedButton(onClick = { controller.disconnect() }, modifier = Modifier.weight(1f).height(48.dp),
                 border = BorderStroke(1.dp, Ub.Outline)) { Text("Disconnect", color = Ub.Accent) }
         }
+    }
+    if (renaming) {
+        RenameDialog(shownName, "A name for this bar in Unbarred. Clear it to use your phone's Bluetooth name for the bar, or the name the bar broadcasts.",
+            onDismiss = { renaming = false },
+            onSave = { nick -> controller.renameConnected(nick); renaming = false })
     }
 }
 
