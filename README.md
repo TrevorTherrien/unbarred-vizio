@@ -10,6 +10,17 @@ reverse engineered by its developer, with AI assistance, for interoperability
 > right-to-repair project. "VIZIO" is a trademark of its owner, used here only to
 > describe which hardware this software works with. See [DISCLAIMER.md](DISCLAIMER.md).
 
+<p align="center">
+  <img src="docs/screenshots/sound.png" width="200" alt="Sound tab: large volume readout, sound mode, surround, height speakers and effects">
+  &nbsp;
+  <img src="docs/screenshots/levels.png" width="200" alt="Levels tab: per-sound-mode bass, treble, center, Clear Dialog and speaker levels">
+  &nbsp;
+  <img src="docs/screenshots/notification.png" width="200" alt="Notification with volume down, volume up, next EQ and disconnect buttons">
+  &nbsp;
+  <img src="docs/screenshots/settings.png" width="200" alt="Settings: volume keys, notification controls, volume step and logging">
+</p>
+<p align="center"><sub>Sound · Levels · Notification controls · Settings</sub></p>
+
 ---
 
 ## Why this exists
