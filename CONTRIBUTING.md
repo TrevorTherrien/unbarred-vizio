@@ -36,6 +36,22 @@ fixes, UI improvements, and especially **compatibility reports for other models*
 - Keep the protocol facts in [PROTOCOL.md](PROTOCOL.md) as the single source of
   truth; both clients should match it.
 
+## Releasing (maintainers)
+
+Versions follow [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`.
+
+1. Bump `versionMajor` / `versionMinor` / `versionPatch` in `app/build.gradle.kts`
+   (`versionCode` is derived from them, so it always increases).
+2. Move the `[Unreleased]` notes in [CHANGELOG.md](CHANGELOG.md) under the new version and date.
+3. Build the signed APK: `./gradlew assembleRelease` →
+   `app/build/outputs/apk/release/unbarred-vX.Y.Z-release.apk`. Signing reads a git-ignored
+   `keystore.properties` at the repo root; without it you get an unsigned APK.
+4. Commit, tag `vX.Y.Z`, push the tag, and publish a GitHub Release for that tag with the APK
+   attached and the changelog section as notes. The in-app update check reads the latest release.
+
+Use the **same signing key for every release** — Android refuses to update an app signed with a
+different key.
+
 ## Reporting bugs
 
 Open an issue with the device model, the client (Android/Python) and version, what

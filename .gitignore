@@ -41,3 +41,8 @@ desktop.ini
 *.hci
 *.snoop
 *.pcap
+
+# ---- Release signing (never commit keys or their passwords) ----
+keystore.properties
+*.jks
+*.keystore

@@ -1,7 +1,28 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+// ---- Version: Semantic Versioning (https://semver.org). Bump these three for a release. ----
+val versionMajor = 0
+val versionMinor = 1
+val versionPatch = 0
+val semver = "$versionMajor.$versionMinor.$versionPatch"
+
+// ---- Release signing: read from keystore.properties at the repo root (git-ignored). ----
+// Without it, assembleRelease still builds, but produces an unsigned APK.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+}
+val hasReleaseKey = keystorePropsFile.exists()
+
+base {
+    // APKs come out as unbarred-v0.1.0-release.apk / -debug.apk
+    archivesName.set("unbarred-v$semver")
 }
 
 android {
@@ -12,15 +33,28 @@ android {
         applicationId = "io.github.trevortherrien.unbarred"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Always increases with the semver: 0.1.0 → 100, 0.1.1 → 101, 1.2.3 → 10203.
+        versionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName = semver
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (hasReleaseKey) {
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasReleaseKey) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

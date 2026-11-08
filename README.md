@@ -106,14 +106,21 @@ The Android client does more than send one-shot commands:
   are involved**. Full details are in [`PROTOCOL.md`](PROTOCOL.md).
 - Nothing in this project talks to any VIZIO or Walmart server.
 
-## Quick start — Android app
+## Install — Android app
+
+Download the latest `unbarred-vX.Y.Z-release.apk` from
+[Releases](https://github.com/TrevorTherrien/unbarred-vizio/releases), open it on your phone and
+allow installing from that source when Android asks. Then grant the Bluetooth permission and tap
+**Scan & Connect**. Changes in each version are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Build from source — Android app
 
 1. Open the project root in **Android Studio**, let Gradle sync.
 2. Enable USB debugging on an Android phone (BLE needs a real device, not an emulator), plug it in.
 3. Press **Run ▶**. Grant the Bluetooth permission, tap **Scan & Connect**.
-4. Once it shows *Authenticated ✓ ready*, use the controls.
 
-For a shareable file: **Build → Build APK(s)** → `app/build/outputs/apk/debug/app-debug.apk`.
+From the command line: `./gradlew assembleDebug` →
+`app/build/outputs/apk/debug/unbarred-vX.Y.Z-debug.apk`.
 
 ## Quick start — Python CLI
 
