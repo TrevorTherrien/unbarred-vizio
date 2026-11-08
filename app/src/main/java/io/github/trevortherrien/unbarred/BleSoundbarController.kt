@@ -16,7 +16,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.ParcelUuid
-import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
@@ -132,8 +131,8 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
 
     init { startWriter() }
 
-    private fun log(s: String) { _status.value = s; Log.i(TAG, s); AppLog.add(s) }
-    private fun emitEvent(msg: String) { _events.tryEmit(msg); Log.w(TAG, "EVENT: $msg"); AppLog.add("⚠ $msg") }
+    private fun log(s: String) { _status.value = s; AppLog.i(TAG, s); AppLog.add(s) }
+    private fun emitEvent(msg: String) { _events.tryEmit(msg); AppLog.w(TAG, "EVENT: $msg"); AppLog.add("⚠ $msg") }
 
     companion object {
         const val TAG = "Unbarred"
@@ -282,7 +281,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
     // ---------------- gatt callback ----------------
     private val gattCb = object : android.bluetooth.BluetoothGattCallback() {
         override fun onConnectionStateChange(g: BluetoothGatt, statusCode: Int, newState: Int) {
-            Log.d(TAG, "onConnectionStateChange newState=$newState status=${gattStatusName(statusCode)}")
+            AppLog.d(TAG, "onConnectionStateChange newState=$newState status=${gattStatusName(statusCode)}")
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 log("Connected — discovering services…")
                 g.discoverServices()
@@ -309,7 +308,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
             // Log each VIZIO characteristic's write properties — tells us whether to use
             // Write-Without-Response (no server ack → no 0x0E) or a plain Write Request.
             chars.filter { it.uuid.toString().contains("37619c1") }.forEach {
-                Log.d(TAG, "CHAR …${it.uuid.toString().takeLast(4)}  props=${propNames(it.properties)}")
+                AppLog.d(TAG, "CHAR …${it.uuid.toString().takeLast(4)}  props=${propNames(it.properties)}")
             }
             scope.launch { runHandshakeThenReady() }
         }
@@ -350,7 +349,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
 
     private fun onNotify(char: UUID, value: ByteArray) {
         val signed = value.firstOrNull()?.toInt()   // Byte.toInt() sign-extends: 0xf6 -> -10
-        Log.i(TAG, "NOTIFY …${char.toString().takeLast(4)} = [${value.toHex()}]${signed?.let { " ($it)" } ?: ""}")
+        AppLog.i(TAG, "NOTIFY …${char.toString().takeLast(4)} = [${value.toHex()}]${signed?.let { " ($it)" } ?: ""}")
         AppLog.verbose("NOTIFY …${char.toString().takeLast(4)} = ${signed ?: "[${value.toHex()}]"}")
         when (char) {
             Proto.CHAR_STATUS   -> _deviceState.value = _deviceState.value.copy(lastStatusHex = value.toHex().ifEmpty { null })
@@ -366,7 +365,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         if (statusCode == BluetoothGatt.GATT_SUCCESS) {
             resumePending(v)
         } else {
-            Log.w(TAG, "GATT op failed: ${gattStatusName(statusCode)}")
+            AppLog.w(TAG, "GATT op failed: ${gattStatusName(statusCode)}")
             failPending(RuntimeException("GATT op failed (${gattStatusName(statusCode)})"))
         }
     }
@@ -430,7 +429,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
             _capabilities.value = Capabilities(profile, discoveredChars, modelName)
             connecting = false
             _phase.value = LinkPhase.READY
-            Log.i(TAG, "Model='${modelName ?: "?"}' → profile '${profile.displayName}' (${discoveredChars.size} chars)")
+            AppLog.i(TAG, "Model='${modelName ?: "?"}' → profile '${profile.displayName}' (${discoveredChars.size} chars)")
         } catch (e: Exception) {
             log("Handshake failed: ${e.message}")
             emitEvent("Authentication failed: ${e.message}")
@@ -479,7 +478,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
     // ---------------- device state reads (on connect + on demand) ----------------
     override fun refreshState() {
         if (gatt == null) return
-        scope.launch { try { refreshStateInternal() } catch (e: Exception) { Log.w(TAG, "refreshState: ${e.message}") } }
+        scope.launch { try { refreshStateInternal() } catch (e: Exception) { AppLog.w(TAG, "refreshState: ${e.message}") } }
     }
 
     /** Reads every reported value best-effort; a missing/unsupported char just yields null. */
@@ -500,7 +499,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
             lastStatusHex = readHex(Proto.SERVICE_SECURITY, Proto.CHAR_STATUS),
         )
         _deviceState.value = st
-        Log.i(TAG, "DeviceState model=${st.modelName} serial=${st.serial} fw=${st.firmware} " +
+        AppLog.i(TAG, "DeviceState model=${st.modelName} serial=${st.serial} fw=${st.firmware} " +
             "name=${st.friendlyName} input='${st.currentInputText}'(0x${st.currentInputHex}) audioOut=${st.audioOut} " +
             "spk=${st.speakerStatusHex} classic=${st.classicStatus} " +
             "resp=${st.lastResponseHex} err=${st.lastErrorHex} status=${st.lastStatusHex}")
@@ -516,7 +515,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         }
         _controlValues.value = map
         val summary = map.entries.joinToString { "${it.key.toString().takeLast(4)}=${it.value}" }
-        Log.i(TAG, "ControlValues $summary")
+        AppLog.i(TAG, "ControlValues $summary")
         AppLog.add("read ${map.size} control values")
     }
 
@@ -532,7 +531,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         )
         var ok = 0
         for ((s, c) in targets) if (enableNotify(s, c)) ok++
-        Log.i(TAG, "subscribed $ok/${targets.size} characteristics")
+        AppLog.i(TAG, "subscribed $ok/${targets.size} characteristics")
         AppLog.add("subscribed $ok/${targets.size} characteristics")
     }
 
@@ -565,7 +564,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
             }
             true
         } catch (e: Exception) {
-            Log.w(TAG, "notify enable failed …${char.toString().takeLast(4)}: ${e.message}"); false
+            AppLog.w(TAG, "notify enable failed …${char.toString().takeLast(4)}: ${e.message}"); false
         }
     }
 
@@ -614,7 +613,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
         val noResp = ch != null && (ch.properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0
         val type = if (noResp) BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
                    else BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        Log.d(TAG, "WRITE $label …${char.toString().takeLast(4)} value=$value " +
+        AppLog.d(TAG, "WRITE $label …${char.toString().takeLast(4)} value=$value " +
                 "type=${if (noResp) "CMD/no-resp" else "REQ/with-resp"} bytes=[${bytes.toHex()}]")
         AppLog.verbose("WRITE $label=$value ${if (noResp) "cmd" else "req"}")
         repeat(MAX_RETRIES) { attempt ->
@@ -623,7 +622,7 @@ class BleSoundbarController(private val context: Context) : SoundbarController {
                 log("$label → $value ✓")
                 return
             } catch (e: Exception) {
-                Log.w(TAG, "WRITE $label attempt ${attempt + 1}/$MAX_RETRIES failed: ${e.message}")
+                AppLog.w(TAG, "WRITE $label attempt ${attempt + 1}/$MAX_RETRIES failed: ${e.message}")
                 if (attempt < MAX_RETRIES - 1) delay(200.milliseconds)
             }
         }

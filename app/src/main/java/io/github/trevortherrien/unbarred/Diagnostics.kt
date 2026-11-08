@@ -1,6 +1,7 @@
 package io.github.trevortherrien.unbarred
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -24,7 +25,9 @@ import java.util.Locale
 object AppSettings {
     private const val PREFS = "unbarred_prefs"
 
-    /** Capture the chatty per-write / per-notify lines into [AppLog] (always logged to Logcat). */
+    /** Master switch: when off, nothing is written to the in-app log or to Logcat. */
+    val logging = MutableStateFlow(false)
+    /** With [logging] on, also capture the chatty per-write / per-notify lines. */
     val verboseLogging = MutableStateFlow(false)
     /** Subscribe to NOTIFY on connect so the UI tracks external (remote) changes. */
     val liveUpdates = MutableStateFlow(true)
@@ -38,6 +41,7 @@ object AppSettings {
     val volumeStep = MutableStateFlow(2)
 
     private val booleans: Map<String, MutableStateFlow<Boolean>> = mapOf(
+        "logging" to logging,
         "verbose_logging" to verboseLogging,
         "live_updates" to liveUpdates,
         "show_diagnostics" to showDiagnostics,
@@ -68,7 +72,8 @@ object AppSettings {
 
 /**
  * A small ring buffer of log lines mirrored from the controller, so the Settings screen can show
- * and export a diagnostic trace without the user needing adb/Logcat.
+ * and export a diagnostic trace without the user needing adb/Logcat. Everything here — the
+ * buffer and the Logcat helpers — is a no-op unless [AppSettings.logging] is on.
  */
 object AppLog {
     private const val CAP = 1000
@@ -77,16 +82,24 @@ object AppLog {
     private val _lines = MutableStateFlow<List<String>>(emptyList())
     val lines: StateFlow<List<String>> = _lines.asStateFlow()
 
-    /** Always captured (status changes, events, errors). */
+    private val on get() = AppSettings.logging.value
+
+    /** Status changes, events, errors (when logging is on). */
     fun add(line: String) {
+        if (!on) return
         val stamped = "${fmt.format(Date())}  $line"
         _lines.value = (_lines.value + stamped).let { if (it.size > CAP) it.takeLast(CAP) else it }
     }
 
-    /** Captured only when verbose logging is on (per-write / per-notify spam). */
+    /** Per-write / per-notify detail: needs logging AND verbose logging on. */
     fun verbose(line: String) {
         if (AppSettings.verboseLogging.value) add(line)
     }
+
+    // Logcat, gated by the same master switch.
+    fun d(tag: String, msg: String) { if (on) Log.d(tag, msg) }
+    fun i(tag: String, msg: String) { if (on) Log.i(tag, msg) }
+    fun w(tag: String, msg: String) { if (on) Log.w(tag, msg) }
 
     fun clear() { _lines.value = emptyList() }
 

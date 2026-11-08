@@ -46,7 +46,7 @@ Everything the vendor app exposes for audio, effects and system settings:
 - **Sound modes** — EQ preset (Movie / Music / Direct), surround / 5.1 mode, Elevate height-speaker aim (Up / Wide / Auto)
 - **Levels** — volume, bass, treble, center, **ClearDialog**, subwoofer, height, surround level & balance, wide-surround level & balance
 - **Effects** — Night mode, Virtual:X, TruVolume, mute
-- **System** — input select, A/V (lip-sync) delay, power-LED brightness, eco power, Auto-HDMI, voice-assistant toggle, spoken announcements, speaker test
+- **System** — input select, A/V (lip-sync) delay, power-LED brightness, eco power, Auto-HDMI, voice-assistant toggle, spoken announcements (speaker test is disabled for now: it leaves the bar unresponsive until power-cycled)
 - **LED** — Elevate LED color (8 colors)
 - **Status** — model / serial / firmware, current input, current audio format, wireless-speaker link status
 
@@ -76,7 +76,8 @@ The Android client does more than send one-shot commands:
 - **Clear connection progress** — scanning → connecting → authenticating → syncing, with
   controls locked until the bar's real values have been read.
 - **Settings & diagnostics** — saved between launches: an in-app log with one-tap
-  share/export, a verbose-logging toggle, a live-updates toggle, and an optional view of the
+  share/export (logging is off by default; one switch turns all of it on), a verbose-logging
+  toggle, a live-updates toggle, and an optional view of the
   raw response/error/status channels — handy for filing issues or bringing up a new model.
 - **On-demand update check** — checks GitHub Releases for a newer build (no background
   polling, no auto-install).

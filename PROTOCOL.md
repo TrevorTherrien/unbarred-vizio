@@ -52,7 +52,7 @@ address.
 | B109 | Announcements (spoken prompts) | 0/1 |
 | B10A | A/V delay (lip-sync) | byte, 0..8 on SL512X |
 | B10B | **Factory reset** ⚠️ | All=0, Audio=1 |
-| B10C | Speaker test | 0/1 |
+| B10C | Speaker test ⚠️ (see §7) | 0/1 |
 | B10D | EQ preset | Movie=0, Music=1, Direct=3 |
 | B10E | Select input | USB=0, Bluetooth=1, HDMI=2 |
 | B10F | Elevate LED color | see §4 |
@@ -166,6 +166,10 @@ Using a different device id requires its matching response. Constants:
 
 `B10B` (factory reset), the entire `…1e01xx` OTA/firmware group, and `F105` outside
 the handshake. A wrong write there can wipe settings or half-flash the unit.
+
+`B10C` (speaker test): on the SL512X, starting the test leaves the bar ignoring every
+later command until it is power-cycled. Both clients disable it until the correct
+start/stop sequence is understood.
 
 ## 8. Live state, notifications, and per-mode EQ
 

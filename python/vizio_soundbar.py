@@ -385,7 +385,9 @@ async def run(args):
         elif c == "autohdmi": await sb.set_auto_hdmi(BOOL[args.arg])
         elif c == "autova":   await sb.set_auto_va(BOOL[args.arg])
         elif c == "announce": await sb.set_announcement(BOOL[args.arg])
-        elif c == "spktest":  await sb.speaker_test(BOOL[args.arg])
+        elif c == "spktest":  # disabled: leaves the SL512X unresponsive until power-cycled
+            print("spktest is disabled: on tested bars it stops the bar responding to any "
+                  "command until it is power-cycled. See PROTOCOL.md section 7.")
         elif c == "name":     await sb.set_name(args.arg)
         elif c == "reset":    await sb.factory_reset(args.arg or "audio")  # audio|all (destructive)
         elif c == "micvol":   await sb.set_mic_volume(args.arg)

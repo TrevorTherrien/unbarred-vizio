@@ -97,6 +97,8 @@ fun SoundbarController.setEcoPower(v: Int)  = write(Proto.SERVICE_MAIN_MENU, Pro
 fun SoundbarController.setAutoHdmi(on: Boolean) = write(Proto.SERVICE_MAIN_MENU, Proto.CHAR_AUTO_HDMI, on.b(), "Auto-HDMI")
 fun SoundbarController.setAutoVa(on: Boolean)   = write(Proto.SERVICE_MAIN_MENU, Proto.CHAR_AUTO_VA, on.b(), "Auto voice-assistant")
 fun SoundbarController.setAnnounce(on: Boolean) = write(Proto.SERVICE_MAIN_MENU, Proto.CHAR_ANNOUNCEMENT, on.b(), "Announcements")
+/** Not used by the UI: on the SL512X this leaves the bar unresponsive until power-cycled. */
+@Deprecated("Leaves the bar unresponsive until power-cycled (SL512X); see PROTOCOL.md §7")
 fun SoundbarController.speakerTest(on: Boolean) = write(Proto.SERVICE_MAIN_MENU, Proto.CHAR_SPEAKER_TEST, on.b(), "Speaker test")
 
 private fun Boolean.b() = if (this) 1 else 0
