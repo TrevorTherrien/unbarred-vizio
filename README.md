@@ -15,11 +15,13 @@ reverse engineered by its developer, with AI assistance, for interoperability
   &nbsp;
   <img src="docs/screenshots/levels.png" width="200" alt="Levels tab: per-sound-mode bass, treble, center, Clear Dialog and speaker levels">
   &nbsp;
-  <img src="docs/screenshots/notification.png" width="200" alt="Notification with volume down, volume up, next EQ and disconnect buttons">
-  &nbsp;
+  <img src="docs/screenshots/system.png" width="200" alt="Levels tab: per-sound-mode bass, treble, center, Clear Dialog and speaker levels">
+  <!-- &nbsp;<br><br>
   <img src="docs/screenshots/settings.png" width="200" alt="Settings: volume keys, notification controls, volume step and logging">
+  &nbsp;
+  <img src="docs/screenshots/notification.png" width="200" alt="Notification with volume down, volume up, next EQ and disconnect buttons"> -->
 </p>
-<p align="center"><sub>Sound · Levels · Notification controls · Settings</sub></p>
+<p align="center"><sub>Sound · Levels · System</sub></p>
 
 ---
 
