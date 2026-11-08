@@ -1,0 +1,43 @@
+# ---- Android / Gradle ----
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+/app/build/
+/app/release/
+local.properties
+
+# Keep the Gradle wrapper
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# ---- Editors / OS ----
+*.swp
+.vscode/
+Thumbs.db
+desktop.ini
+
+# ---- Local troubleshooting / private ----
+# (host-specific scripts and captures should not be published)
+*.cab
+*.hci
+*.snoop
+*.pcap
